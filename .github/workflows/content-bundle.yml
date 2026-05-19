@@ -1,11 +1,20 @@
 name: Content bundle
 
 # Full KJV + Strong's SQLite bundle (~66 books). Slow; run on demand or release tags.
+#
+# Tag push (v*): build, verify, and publish to GitHub Releases.
+# workflow_dispatch: build and verify only (no release).
+#
+# Install from a release:
+#   fontes sync --url https://github.com/DavidHoenisch/fontes/releases/download/<tag>/fontes-core-kjv-strongs-1.0.0.zip
 on:
   workflow_dispatch:
   push:
     tags:
       - "v*"
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -53,12 +62,17 @@ jobs:
           print(f'OK: {books} books, {verses} verses')
           "
 
-      - name: Upload bundle artifact
-        uses: actions/upload-artifact@v4
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          name: fontes-core-kjv-strongs-1.0.0
-          path: |
+          name: Content bundle kjv-strongs-1.0.0
+          body: |
+            KJV + Strong's content bundle (66 books).
+
+            ```bash
+            fontes sync --url https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/fontes-core-kjv-strongs-1.0.0.zip
+            ```
+          files: |
             data/bundles/fontes-core-kjv-strongs-1.0.0.zip
-            data/bundles/content.sqlite
             data/bundles/manifest.json
-          retention-days: 90
