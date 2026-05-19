@@ -1,0 +1,48 @@
+# --- Rust ---
+/target/
+**/*.rs.bk
+**/*.profraw
+
+# --- Python (tools/data) ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+.env/
+.env.*
+!.env.example
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# --- Downloaded upstream sources (fetch_sources.py) ---
+.cache/
+
+# --- Content bundles (large; build with tools/data/build_full.py) ---
+data/bundles/
+data/bundles/*.zip
+
+# --- Local / scratch DBs (dev fixtures under data/fixtures/ stay tracked) ---
+data/**/*.sqlite
+!data/fixtures/*.sqlite
+
+# --- Editor & OS ---
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# --- Logs & debug ---
+*.log
+rusty-tags/
