@@ -1,4 +1,4 @@
-use fontes_core::{Database, KJV_TRANSLATION_ID, verse_id};
+use fontes_core::{verse_id, Database, KJV_TRANSLATION_ID};
 
 fn fixture_db() -> Database {
     let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -18,7 +18,10 @@ fn loads_john_chapter_one() {
         !v1.text.contains('<'),
         "verse text must not contain HTML from upstream KJV"
     );
-    let word = v1.tokens.iter().find(|t| t.strong_key.as_deref() == Some("G3056"));
+    let word = v1
+        .tokens
+        .iter()
+        .find(|t| t.strong_key.as_deref() == Some("G3056"));
     assert!(word.is_some(), "expected Word tagged G3056");
 }
 
@@ -54,7 +57,9 @@ fn strong_lookup_and_occurrences() {
     assert_eq!(entry.lang, "greek");
     assert!(!entry.definition.is_empty());
 
-    let count = db.count_occurrences("G3056", KJV_TRANSLATION_ID).expect("count");
+    let count = db
+        .count_occurrences("G3056", KJV_TRANSLATION_ID)
+        .expect("count");
     assert!(count >= 3);
 
     let occ = db

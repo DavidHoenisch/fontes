@@ -28,11 +28,12 @@ impl Database {
     }
 
     pub fn strong_xrefs(&self, from_key: &str) -> Result<Vec<String>> {
-        let mut stmt = self.content().prepare(
-            "SELECT to_key FROM strong_xref WHERE from_key = ?1 ORDER BY to_key",
-        )?;
+        let mut stmt = self
+            .content()
+            .prepare("SELECT to_key FROM strong_xref WHERE from_key = ?1 ORDER BY to_key")?;
         let rows = stmt.query_map([from_key], |row| row.get(0))?;
-        rows.collect::<std::result::Result<_, _>>().map_err(Into::into)
+        rows.collect::<std::result::Result<_, _>>()
+            .map_err(Into::into)
     }
 
     pub fn list_occurrences(
@@ -69,7 +70,8 @@ impl Database {
                 })
             },
         )?;
-        rows.collect::<std::result::Result<_, _>>().map_err(Into::into)
+        rows.collect::<std::result::Result<_, _>>()
+            .map_err(Into::into)
     }
 
     pub fn list_occurrences_kjv(

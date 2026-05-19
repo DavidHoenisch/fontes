@@ -33,8 +33,8 @@ fn copy_blocking(text: &str) -> Result<()> {
         }
     }
 
-    let mut clipboard = Clipboard::new()
-        .map_err(|e| Error::Message(format!("clipboard unavailable: {e}")))?;
+    let mut clipboard =
+        Clipboard::new().map_err(|e| Error::Message(format!("clipboard unavailable: {e}")))?;
 
     #[cfg(target_os = "linux")]
     {
@@ -76,10 +76,7 @@ fn copy_with_wl_copy(text: &str) -> Result<()> {
             return Ok(());
         }
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(Error::Message(format!(
-            "wl-copy failed: {}",
-            stderr.trim()
-        )));
+        return Err(Error::Message(format!("wl-copy failed: {}", stderr.trim())));
     }
 
     let mut child = Command::new("wl-copy")
@@ -104,8 +101,5 @@ fn copy_with_wl_copy(text: &str) -> Result<()> {
     }
 
     let stderr = String::from_utf8_lossy(&output.stderr);
-    Err(Error::Message(format!(
-        "wl-copy failed: {}",
-        stderr.trim()
-    )))
+    Err(Error::Message(format!("wl-copy failed: {}", stderr.trim())))
 }

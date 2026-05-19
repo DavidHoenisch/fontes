@@ -81,10 +81,7 @@ mod tests {
     fn formats_single_verse() {
         let ch = sample_chapter();
         let text = format_verses_clipboard(&ch, 0, 0);
-        assert_eq!(
-            text,
-            "John 3:16 (KJV) For God so loved the world."
-        );
+        assert_eq!(text, "John 3:16 (KJV) For God so loved the world.");
     }
 
     #[test]

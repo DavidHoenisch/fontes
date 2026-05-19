@@ -17,14 +17,13 @@ pub fn sync_from_bundle(bundle_path: &Path, data_dir: &Path) -> Result<()> {
 
     let file = File::open(bundle_path)
         .map_err(|e| fontes_core::Error::Message(format!("open bundle: {e}")))?;
-    let mut archive = ZipArchive::new(file)
-        .map_err(|e| fontes_core::Error::Message(format!("read zip: {e}")))?;
+    let mut archive =
+        ZipArchive::new(file).map_err(|e| fontes_core::Error::Message(format!("read zip: {e}")))?;
 
     let mut manifest: Option<BundleManifest> = None;
     let temp_dir = data_dir.join(".sync-tmp");
     if temp_dir.exists() {
-        fs::remove_dir_all(&temp_dir)
-            .map_err(|e| fontes_core::Error::Message(e.to_string()))?;
+        fs::remove_dir_all(&temp_dir).map_err(|e| fontes_core::Error::Message(e.to_string()))?;
     }
     fs::create_dir_all(&temp_dir).map_err(|e| fontes_core::Error::Message(e.to_string()))?;
 
@@ -40,8 +39,8 @@ pub fn sync_from_bundle(bundle_path: &Path, data_dir: &Path) -> Result<()> {
         if let Some(parent) = out_path.parent() {
             fs::create_dir_all(parent).map_err(|e| fontes_core::Error::Message(e.to_string()))?;
         }
-        let mut out = File::create(&out_path)
-            .map_err(|e| fontes_core::Error::Message(e.to_string()))?;
+        let mut out =
+            File::create(&out_path).map_err(|e| fontes_core::Error::Message(e.to_string()))?;
         copy(&mut entry, &mut out).map_err(|e| fontes_core::Error::Message(e.to_string()))?;
 
         if name.ends_with("manifest.json") {

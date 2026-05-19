@@ -106,9 +106,7 @@ fn run_data_build() -> fontes_core::Result<()> {
         .status()
         .map_err(|e| fontes_core::Error::Message(e.to_string()))?;
     if !status.success() {
-        return Err(fontes_core::Error::Message(
-            "build_full.py failed".into(),
-        ));
+        return Err(fontes_core::Error::Message("build_full.py failed".into()));
     }
     Ok(())
 }
@@ -130,7 +128,11 @@ fn main() -> fontes_core::Result<()> {
                 resume: !no_resume,
             })?;
         }
-        CliCommand::Sync { bundle, sqlite, url } => {
+        CliCommand::Sync {
+            bundle,
+            sqlite,
+            url,
+        } => {
             let sources = [bundle.is_some(), sqlite.is_some(), url.is_some()]
                 .iter()
                 .filter(|&&x| x)
@@ -178,7 +180,12 @@ fn main() -> fontes_core::Result<()> {
         CliCommand::Chapter { book, chapter } => {
             let db = open_db(&data_dir)?;
             let ch = db.get_chapter_kjv(&book, chapter)?;
-            println!("{} {} ({} verses)\n", ch.book.name, ch.chapter, ch.verses.len());
+            println!(
+                "{} {} ({} verses)\n",
+                ch.book.name,
+                ch.chapter,
+                ch.verses.len()
+            );
             for v in &ch.verses {
                 print!("{}:{}  ", ch.chapter, v.reference.verse);
                 for t in &v.tokens {

@@ -25,7 +25,11 @@ impl Database {
              LIMIT ?3",
         )?;
         let rows = stmt.query_map(
-            params![fts_query, translation_id, limit.try_into().unwrap_or(i64::MAX)],
+            params![
+                fts_query,
+                translation_id,
+                limit.try_into().unwrap_or(i64::MAX)
+            ],
             |row| {
                 let text: String = row.get(5)?;
                 Ok(SearchHit {
@@ -38,7 +42,8 @@ impl Database {
                 })
             },
         )?;
-        rows.collect::<std::result::Result<_, _>>().map_err(Into::into)
+        rows.collect::<std::result::Result<_, _>>()
+            .map_err(Into::into)
     }
 }
 
@@ -52,10 +57,7 @@ pub fn search_terms(query: &str) -> Vec<String> {
 }
 
 fn sanitize_fts_token(token: &str) -> Option<String> {
-    let cleaned: String = token
-        .chars()
-        .filter(|c| c.is_alphanumeric())
-        .collect();
+    let cleaned: String = token.chars().filter(|c| c.is_alphanumeric()).collect();
     if cleaned.is_empty() {
         None
     } else {

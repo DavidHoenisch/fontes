@@ -11,8 +11,7 @@ const USER_SCHEMA: &str = include_str!("../../../schema/user.sql");
 
 pub(crate) fn connect(path: &Path) -> Result<Connection> {
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| crate::error::Error::Message(e.to_string()))?;
+        std::fs::create_dir_all(parent).map_err(|e| crate::error::Error::Message(e.to_string()))?;
     }
     let conn = Connection::open(path)?;
     conn.execute("PRAGMA foreign_keys = ON", [])?;

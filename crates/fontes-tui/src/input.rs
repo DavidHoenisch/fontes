@@ -35,10 +35,9 @@ fn handle_reading(app: &mut App, key: KeyEvent) -> Result<bool> {
         KeyCode::Char('n') => app.open_note_at_cursor()?,
         KeyCode::Char('D') => app.delete_note_at_cursor()?,
         KeyCode::Char('e') => {
-            if let Some(id) = crate::overlay::note_id_at_token(
-                &app.note_anchors,
-                app.cursor_token_idx(),
-            ) {
+            if let Some(id) =
+                crate::overlay::note_id_at_token(&app.note_anchors, app.cursor_token_idx())
+            {
                 app.open_note_editor_existing(id)?;
             } else {
                 app.status = "No note here — press n to create.".into();

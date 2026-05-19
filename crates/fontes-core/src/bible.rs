@@ -20,7 +20,8 @@ impl Database {
                 sort_order: row.get(5)?,
             })
         })?;
-        rows.collect::<std::result::Result<_, _>>().map_err(Into::into)
+        rows.collect::<std::result::Result<_, _>>()
+            .map_err(Into::into)
     }
 
     /// Books that have at least one verse in the content bundle.
@@ -41,7 +42,8 @@ impl Database {
                 sort_order: row.get(5)?,
             })
         })?;
-        rows.collect::<std::result::Result<_, _>>().map_err(Into::into)
+        rows.collect::<std::result::Result<_, _>>()
+            .map_err(Into::into)
     }
 
     pub fn max_chapter(&self, book_id: i64) -> Result<i32> {
@@ -69,9 +71,7 @@ impl Database {
             })
         })
         .map_err(|e| match e {
-            rusqlite::Error::QueryReturnedNoRows => {
-                Error::NotFound("book", book_id.to_string())
-            }
+            rusqlite::Error::QueryReturnedNoRows => Error::NotFound("book", book_id.to_string()),
             other => other.into(),
         })
     }
@@ -92,9 +92,7 @@ impl Database {
             })
         })
         .map_err(|e| match e {
-            rusqlite::Error::QueryReturnedNoRows => {
-                Error::NotFound("book", abbrev.to_string())
-            }
+            rusqlite::Error::QueryReturnedNoRows => Error::NotFound("book", abbrev.to_string()),
             other => other.into(),
         })
     }
@@ -115,9 +113,14 @@ impl Database {
              ORDER BY v.verse",
         )?;
 
-        let verse_rows = verse_stmt.query_map(params![translation_id, book.id, chapter], |row| {
-            Ok((row.get::<_, i64>(0)?, row.get::<_, i32>(1)?, row.get::<_, String>(2)?))
-        })?;
+        let verse_rows =
+            verse_stmt.query_map(params![translation_id, book.id, chapter], |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, i32>(1)?,
+                    row.get::<_, String>(2)?,
+                ))
+            })?;
 
         let mut verses = Vec::new();
         for row in verse_rows {
@@ -162,6 +165,7 @@ impl Database {
                 flags: row.get(3)?,
             })
         })?;
-        rows.collect::<std::result::Result<_, _>>().map_err(Into::into)
+        rows.collect::<std::result::Result<_, _>>()
+            .map_err(Into::into)
     }
 }

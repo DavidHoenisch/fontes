@@ -119,8 +119,7 @@ fn draw_body(frame: &mut Frame, app: &mut App, area: Rect) {
                 .add_modifier(Modifier::DIM),
         )];
 
-        let in_verse_copy_range =
-            verse_in_copy_range(app.verse_anchor, app.verse_index, vi);
+        let in_verse_copy_range = verse_in_copy_range(app.verse_anchor, app.verse_index, vi);
 
         for (ti, token) in verse.tokens.iter().enumerate() {
             let is_cursor = vi == app.verse_index && ti == app.token_index;
@@ -143,7 +142,8 @@ fn draw_body(frame: &mut Frame, app: &mut App, area: Rect) {
                 app.verse_index,
                 app.token_index,
                 ti,
-            ) && !is_cursor {
+            ) && !is_cursor
+            {
                 style = style.bg(Color::DarkGray);
             }
             if is_cursor {
@@ -178,10 +178,7 @@ fn draw_body(frame: &mut Frame, app: &mut App, area: Rect) {
     let paragraph = Paragraph::new(display_lines)
         .wrap(Wrap { trim: false })
         .style(Style::default().fg(Color::White));
-    frame.render_widget(
-        paragraph.scroll((app.scroll_top as u16, 0)),
-        text_area,
-    );
+    frame.render_widget(paragraph.scroll((app.scroll_top as u16, 0)), text_area);
 
     let mut scrollbar_state =
         ratatui::widgets::ScrollbarState::new(app.chapter.verses.len()).position(app.verse_index);
@@ -342,7 +339,11 @@ fn draw_note_editor(frame: &mut Frame, app: &mut App) {
 
     let layout = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(8)])
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(0),
+            Constraint::Length(8),
+        ])
         .split(area);
 
     let title_style = if app.note_focus == NoteEditFocus::Title {
@@ -369,9 +370,7 @@ fn draw_note_editor(frame: &mut Frame, app: &mut App) {
     frame.render_widget(&app.note_body, layout[1]);
 
     let preview = to_plain(&app.note_body.lines().join("\n"));
-    let preview_block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Preview ");
+    let preview_block = Block::default().borders(Borders::ALL).title(" Preview ");
     frame.render_widget(
         Paragraph::new(preview)
             .block(preview_block)
@@ -401,8 +400,7 @@ fn draw_search_overlay(frame: &mut Frame, app: &mut App) {
                 let prefix = format!("{} {}:{} — ", hit.book_abbrev, hit.chapter, hit.verse);
                 let mut line = highlight_line(&hit.snippet, query);
                 if !prefix.is_empty() {
-                    line.spans
-                        .insert(0, Span::raw(prefix));
+                    line.spans.insert(0, Span::raw(prefix));
                 }
                 ListItem::new(line)
             })
@@ -540,7 +538,9 @@ fn draw_notes_list(frame: &mut Frame, app: &mut App) {
 
     let filtered = app.filtered_note_indices();
     let items: Vec<ListItem> = if app.all_notes.is_empty() {
-        vec![ListItem::new("No notes yet — press n on a word to create one")]
+        vec![ListItem::new(
+            "No notes yet — press n on a word to create one",
+        )]
     } else if filtered.is_empty() {
         vec![ListItem::new("No matching notes")]
     } else {
@@ -558,12 +558,11 @@ fn draw_notes_list(frame: &mut Frame, app: &mut App) {
                 let preview_line = preview.lines().next().unwrap_or("");
                 let location = Span::styled(
                     format!("{}  ", entry.location),
-                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
                 );
-                let rest = format!(
-                    "#{id} {title} — {preview_line}",
-                    id = entry.note.id
-                );
+                let rest = format!("#{id} {title} — {preview_line}", id = entry.note.id);
                 let mut spans = vec![location];
                 if app.notes_search_active && !app.notes_filter.is_empty() {
                     spans.extend(highlight_filter_line(&rest, &app.notes_filter).spans);

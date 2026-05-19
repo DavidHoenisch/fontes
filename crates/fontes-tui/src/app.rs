@@ -2,9 +2,9 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use fontes_core::{
-    format_verses_clipboard, Annotation, AnnotationKind, Book, Chapter, Database,
-    KJV_TRANSLATION_ID, NoteAnchor, NoteListEntry, Result, SearchHit, StrongEntry,
-    StrongOccurrence, Verse, verse_ref_from_id,
+    format_verses_clipboard, verse_ref_from_id, Annotation, AnnotationKind, Book, Chapter,
+    Database, NoteAnchor, NoteListEntry, Result, SearchHit, StrongEntry, StrongOccurrence, Verse,
+    KJV_TRANSLATION_ID,
 };
 use ratatui::widgets::ListState;
 use tui_textarea::TextArea;
@@ -197,7 +197,8 @@ impl App {
         }
         self.selection_anchor = Some((self.verse_index, self.token_index));
         self.status =
-            "Selection set — move with h/l, then H (highlight) or u (underline). Esc clears.".into();
+            "Selection set — move with h/l, then H (highlight) or u (underline). Esc clears."
+                .into();
     }
 
     pub fn clear_selection_anchor(&mut self) {
@@ -213,8 +214,7 @@ impl App {
             return;
         }
         self.verse_anchor = Some(self.verse_index);
-        self.status =
-            "Verse anchor set — move with j/k, then y to copy. Esc clears.".into();
+        self.status = "Verse anchor set — move with j/k, then y to copy. Esc clears.".into();
     }
 
     pub fn verse_copy_indices(&self) -> (usize, usize) {
@@ -274,7 +274,11 @@ impl App {
         }
         self.verse_index = self.verse_index.min(self.chapter.verses.len() - 1);
         let n = self.chapter.verses[self.verse_index].tokens.len();
-        self.token_index = if n == 0 { 0 } else { self.token_index.min(n - 1) };
+        self.token_index = if n == 0 {
+            0
+        } else {
+            self.token_index.min(n - 1)
+        };
         self.verse_list_state.select(Some(self.verse_index));
     }
 
@@ -537,8 +541,7 @@ impl App {
     fn goto_note_anchor(&mut self, verse_id: i64, start_token: Option<i32>) -> Result<()> {
         let reference = verse_ref_from_id(verse_id);
         let book = self.db.book_by_id(reference.book_id)?;
-        let need_reload =
-            self.book_abbrev != book.abbrev || self.chapter_num != reference.chapter;
+        let need_reload = self.book_abbrev != book.abbrev || self.chapter_num != reference.chapter;
         self.book_abbrev = book.abbrev;
         self.chapter_num = reference.chapter;
         if need_reload {
@@ -706,13 +709,8 @@ impl App {
         } else {
             let id = self.db.create_note(title, &self.edit_body)?;
             let idx = self.cursor_token_idx();
-            self.db.add_note_anchor_token_range(
-                id,
-                self.cursor_verse_id(),
-                idx,
-                idx + 1,
-                None,
-            )?;
+            self.db
+                .add_note_anchor_token_range(id, self.cursor_verse_id(), idx, idx + 1, None)?;
             id
         };
         self.reload_chapter()?;
@@ -791,8 +789,14 @@ impl App {
             self.db.delete_annotation(existing)?;
             self.status = "Removed underline.".into();
         } else {
-            self.db
-                .create_annotation(AnnotationKind::Underline, verse_id, start, end, None, None)?;
+            self.db.create_annotation(
+                AnnotationKind::Underline,
+                verse_id,
+                start,
+                end,
+                None,
+                None,
+            )?;
             self.status = if range_words > 1 {
                 format!("Underlined {range_words} words.")
             } else {
@@ -864,9 +868,7 @@ impl App {
             self.search_ran_query.clear();
             return Ok(());
         }
-        self.search_results = self
-            .db
-            .search_verses(query, KJV_TRANSLATION_ID, 25)?;
+        self.search_results = self.db.search_verses(query, KJV_TRANSLATION_ID, 25)?;
         self.search_list_state.select(Some(0));
         self.search_ran_query = query.to_string();
         Ok(())
@@ -894,10 +896,7 @@ impl App {
         }
         self.clamp_cursor();
         self.mode = Mode::Reading;
-        self.status = format!(
-            "Jumped to {} {}:{}",
-            hit.book_name, hit.chapter, hit.verse
-        );
+        self.status = format!("Jumped to {} {}:{}", hit.book_name, hit.chapter, hit.verse);
         Ok(())
     }
 
@@ -961,12 +960,7 @@ fn empty_chapter(chapter: i32) -> Chapter {
 }
 
 fn note_entry_matches(terms: &[String], entry: &NoteListEntry) -> bool {
-    let title = entry
-        .note
-        .title
-        .as_deref()
-        .unwrap_or("")
-        .to_lowercase();
+    let title = entry.note.title.as_deref().unwrap_or("").to_lowercase();
     let body = crate::markdown::to_plain(&entry.note.body).to_lowercase();
     let haystack = format!(
         "{} {} {} #{}",
