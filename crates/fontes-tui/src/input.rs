@@ -45,6 +45,12 @@ fn handle_reading(app: &mut App, key: KeyEvent) -> Result<bool> {
             }
         }
         KeyCode::Char('v') => app.set_selection_anchor(),
+        KeyCode::Char('V') => app.set_verse_anchor(),
+        KeyCode::Char('y') => {
+            if let Err(e) = app.copy_verses_to_clipboard() {
+                app.status = e.to_string();
+            }
+        }
         KeyCode::Char('H') => app.toggle_highlight()?,
         KeyCode::Char('u') => app.toggle_underline()?,
         KeyCode::Esc => app.clear_selection_anchor(),

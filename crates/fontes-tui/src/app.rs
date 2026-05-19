@@ -2,13 +2,14 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use fontes_core::{
-    Annotation, AnnotationKind, Book, Chapter, Database, KJV_TRANSLATION_ID, NoteAnchor,
-    NoteListEntry,
-    Result, SearchHit, StrongEntry, StrongOccurrence, Verse, verse_ref_from_id,
+    format_verses_clipboard, Annotation, AnnotationKind, Book, Chapter, Database,
+    KJV_TRANSLATION_ID, NoteAnchor, NoteListEntry, Result, SearchHit, StrongEntry,
+    StrongOccurrence, Verse, verse_ref_from_id,
 };
 use ratatui::widgets::ListState;
 use tui_textarea::TextArea;
 
+use crate::clipboard::ClipboardStore;
 use crate::overlay::note_id_at_token;
 
 /// Delay before running a live search after the query changes.
@@ -46,6 +47,8 @@ pub struct App {
     pub token_index: usize,
     /// Multi-word mark anchor: (verse index in chapter, token index in that verse).
     pub selection_anchor: Option<(usize, usize)>,
+    /// Verse-range anchor for copy (index in `chapter.verses`).
+    pub verse_anchor: Option<usize>,
     /// Top visible row in the chapter view (in wrapped display lines).
     pub scroll_top: usize,
     pub verse_list_state: ListState,
@@ -87,6 +90,7 @@ pub struct App {
     pub notes_filter: String,
     pub notes_search_active: bool,
     pub notes_list_state: ListState,
+    clipboard: ClipboardStore,
 }
 
 impl App {
@@ -114,6 +118,7 @@ impl App {
             verse_index: 0,
             token_index: 0,
             selection_anchor: None,
+            verse_anchor: None,
             scroll_top: 0,
             verse_list_state: ListState::default(),
             annotations: Vec::new(),
@@ -146,6 +151,7 @@ impl App {
             notes_filter: String::new(),
             notes_search_active: false,
             notes_list_state: ListState::default(),
+            clipboard: ClipboardStore::new()?,
         };
         app.reload_chapter()?;
         if resume {
@@ -195,9 +201,47 @@ impl App {
     }
 
     pub fn clear_selection_anchor(&mut self) {
-        if self.selection_anchor.take().is_some() {
+        let had_word = self.selection_anchor.take().is_some();
+        let had_verse = self.verse_anchor.take().is_some();
+        if had_word || had_verse {
             self.status = "Selection cleared.".into();
         }
+    }
+
+    pub fn set_verse_anchor(&mut self) {
+        if self.chapter.verses.is_empty() {
+            return;
+        }
+        self.verse_anchor = Some(self.verse_index);
+        self.status =
+            "Verse anchor set — move with j/k, then y to copy. Esc clears.".into();
+    }
+
+    pub fn verse_copy_indices(&self) -> (usize, usize) {
+        if let Some(anchor) = self.verse_anchor {
+            let lo = anchor.min(self.verse_index);
+            let hi = anchor.max(self.verse_index);
+            (lo, hi)
+        } else {
+            (self.verse_index, self.verse_index)
+        }
+    }
+
+    pub fn copy_verses_to_clipboard(&mut self) -> Result<()> {
+        if self.chapter.verses.is_empty() {
+            return Ok(());
+        }
+        let (lo, hi) = self.verse_copy_indices();
+        let text = format_verses_clipboard(&self.chapter, lo, hi);
+        self.clipboard.set_text(&text)?;
+        let v_lo = self.chapter.verses[lo].reference.verse;
+        let v_hi = self.chapter.verses[hi].reference.verse;
+        self.status = if lo == hi {
+            format!("Copied {v_lo} to clipboard.")
+        } else {
+            format!("Copied {v_lo}-{v_hi} to clipboard.")
+        };
+        Ok(())
     }
 
     fn clear_selection_if_left_anchor_verse(&mut self, verse_index: usize) {
@@ -216,6 +260,7 @@ impl App {
         self.annotations = self.db.annotations_for_verses(&verse_ids)?;
         self.note_anchors = self.db.note_anchors_for_verses(&verse_ids)?;
         self.selection_anchor = None;
+        self.verse_anchor = None;
         self.clamp_cursor();
         self.scroll_top = 0;
         self.verse_list_state.select(Some(self.verse_index));

@@ -1,0 +1,64 @@
+name: Content bundle
+
+# Full KJV + Strong's SQLite bundle (~66 books). Slow; run on demand or release tags.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build content.sqlite + zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache upstream sources
+        uses: actions/cache@v4
+        with:
+          path: .cache/fontes/sources
+          key: fontes-sources-full-${{ hashFiles('tools/data/books.py', 'tools/data/parse_kjv.py', 'tools/data/parse_strongs.py') }}
+          restore-keys: |
+            fontes-sources-full-
+            fontes-sources-
+
+      - name: Fetch sources and build bundle
+        run: python3 tools/data/build_full.py
+
+      - name: Verify bundle
+        run: |
+          test -f data/bundles/content.sqlite
+          test -f data/bundles/manifest.json
+          test -f data/bundles/fontes-core-kjv-strongs-1.0.0.zip
+          python3 -c "
+          import json, sqlite3, zipfile
+          from pathlib import Path
+          root = Path('data/bundles')
+          manifest = json.loads((root / 'manifest.json').read_text())
+          assert manifest['bundle_id'] == 'fontes-core'
+          conn = sqlite3.connect(root / 'content.sqlite')
+          books = conn.execute('SELECT COUNT(*) FROM book').fetchone()[0]
+          verses = conn.execute('SELECT COUNT(*) FROM verse').fetchone()[0]
+          conn.close()
+          assert books == 66, books
+          assert verses > 30000, verses
+          with zipfile.ZipFile(root / 'fontes-core-kjv-strongs-1.0.0.zip') as zf:
+              names = set(zf.namelist())
+          assert names == {'content.sqlite', 'manifest.json'}, names
+          print(f'OK: {books} books, {verses} verses')
+          "
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fontes-core-kjv-strongs-1.0.0
+          path: |
+            data/bundles/fontes-core-kjv-strongs-1.0.0.zip
+            data/bundles/content.sqlite
+            data/bundles/manifest.json
+          retention-days: 90

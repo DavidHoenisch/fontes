@@ -1,6 +1,7 @@
 //! SQLite data layer for the fontes Bible study application.
 
 mod bible;
+mod citation;
 mod db;
 mod error;
 mod model;
@@ -9,6 +10,7 @@ mod paths;
 mod search;
 mod strongs;
 
+pub use citation::format_verses_clipboard;
 pub use db::{Database, KJV_TRANSLATION_ID};
 pub use error::{Error, Result};
 pub use model::*;

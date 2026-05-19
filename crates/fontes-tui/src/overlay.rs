@@ -18,6 +18,19 @@ fn anchor_covers_token(anchor: &NoteAnchor, token_idx: i32) -> bool {
     }
 }
 
+pub fn verse_in_copy_range(
+    verse_anchor: Option<usize>,
+    cursor_verse_index: usize,
+    verse_index: usize,
+) -> bool {
+    let Some(anchor) = verse_anchor else {
+        return false;
+    };
+    let lo = anchor.min(cursor_verse_index);
+    let hi = anchor.max(cursor_verse_index);
+    verse_index >= lo && verse_index <= hi
+}
+
 pub fn token_in_pending_selection(
     selection_anchor: Option<(usize, usize)>,
     verse_index: usize,

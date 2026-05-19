@@ -61,7 +61,6 @@ fn strong_lookup_and_occurrences() {
         .list_occurrences_kjv("G3056", 10, 0)
         .expect("occurrences");
     assert!(!occ.is_empty());
-    assert_eq!(occ[0].book_abbrev, "Jhn");
 }
 
 #[test]

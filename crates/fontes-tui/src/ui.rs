@@ -11,7 +11,9 @@ use fontes_core::AnnotationKind;
 use crate::app::{App, Mode, NoteEditFocus, SEARCH_MIN_CHARS};
 use crate::list_scroll::{ensure_list_visible, inner_height};
 use crate::markdown::to_plain;
-use crate::overlay::{token_annotation_kind, token_has_note, token_in_pending_selection};
+use crate::overlay::{
+    token_annotation_kind, token_has_note, token_in_pending_selection, verse_in_copy_range,
+};
 use crate::scroll::{ensure_verse_visible, verse_layout};
 use crate::search_highlight::{highlight_filter_line, highlight_line};
 
@@ -117,9 +119,15 @@ fn draw_body(frame: &mut Frame, app: &mut App, area: Rect) {
                 .add_modifier(Modifier::DIM),
         )];
 
+        let in_verse_copy_range =
+            verse_in_copy_range(app.verse_anchor, app.verse_index, vi);
+
         for (ti, token) in verse.tokens.iter().enumerate() {
             let is_cursor = vi == app.verse_index && ti == app.token_index;
             let mut style = Style::default().fg(Color::White);
+            if in_verse_copy_range && !is_cursor {
+                style = style.bg(Color::Rgb(40, 40, 55));
+            }
             if let Some(kind) = token_annotation_kind(&verse_ann, token.idx) {
                 style = match kind {
                     AnnotationKind::Highlight => style.bg(Color::Yellow).fg(Color::Black),
@@ -186,6 +194,20 @@ fn draw_body(frame: &mut Frame, app: &mut App, area: Rect) {
     );
 }
 
+fn truncate_to_width(text: &str, width: u16) -> String {
+    let max = width.max(1) as usize;
+    let char_count = text.chars().count();
+    if char_count <= max {
+        return text.to_string();
+    }
+    if max == 1 {
+        return "…".to_string();
+    }
+    let mut s: String = text.chars().take(max - 1).collect();
+    s.push('…');
+    s
+}
+
 fn draw_footer(frame: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -194,7 +216,7 @@ fn draw_footer(frame: &mut Frame, app: &App, area: Rect) {
 
     let help = match app.mode {
         Mode::Reading => {
-            "v select · H highlight · u underline · b book · c chapter · s Strong · n note · / search · ? help · q quit"
+            "y copy · V verse range · v word range · H highlight · u underline · b book · s Strong · n note · / search · ? help · q quit"
         }
         Mode::StrongPopup => "Esc close │ Enter jump │ ↑/↓ occurrence",
         Mode::NoteEditor => "Tab field │ Ctrl+S save │ Esc cancel",
@@ -206,8 +228,9 @@ fn draw_footer(frame: &mut Frame, app: &App, area: Rect) {
         Mode::Help => "Esc close",
     };
     if !app.status.is_empty() {
+        let status = truncate_to_width(app.status.as_str(), chunks[0].width);
         frame.render_widget(
-            Paragraph::new(app.status.as_str()).style(Style::default().fg(Color::Cyan)),
+            Paragraph::new(status).style(Style::default().fg(Color::Cyan)),
             chunks[0],
         );
     }
@@ -595,9 +618,9 @@ Study
   n / e          new / edit note on word
   N              all notes (/ to search in list)
   D              delete note on word
-  v              set selection anchor (same verse)
-  H / u          highlight (yellow) / underline selection
-                 move with h/l between anchor and cursor, then mark
+  y              copy verse(s) with reference (KJV text)
+  V              verse anchor — j/k to end of range, then y
+  v              word anchor — h/l, then H highlight or u underline
   /              search scripture
 
 Other

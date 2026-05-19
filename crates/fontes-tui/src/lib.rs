@@ -1,4 +1,5 @@
 mod app;
+mod clipboard;
 mod input;
 mod list_scroll;
 mod markdown;

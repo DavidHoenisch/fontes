@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets
+
+      - name: Build
+        run: cargo build --workspace --release
+
+      - name: Test
+        run: cargo test --workspace
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: fontes-linux-x86_64
+          path: |
+            target/release/fontes
+            target/release/fontes-tui
+          if-no-files-found: error
+
+  data-dev:
+    name: Dev content pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache upstream sources
+        uses: actions/cache@v4
+        with:
+          path: .cache/fontes/sources
+          key: fontes-sources-dev-${{ hashFiles('tools/data/books.py', 'tools/data/parse_kjv.py') }}
+          restore-keys: |
+            fontes-sources-dev-
+            fontes-sources-
+
+      - name: Build dev fixtures (John 1–3 + Strong's)
+        run: python3 tools/data/seed_dev.py
+
+      - name: Python unit tests
+        run: python3 -m unittest discover -s tools/data -p 'test_*.py'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Integration tests (fresh fixtures)
+        run: cargo test -p fontes-core --test integration
+
+  python:
+    name: Python (offline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Unit tests (no network)
+        run: python3 -m unittest discover -s tools/data -p 'test_*.py'
